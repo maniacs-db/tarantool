@@ -25,6 +25,7 @@ do_test insert1-0.5 {
 	execsql {SELECT id, name, surname, bar, foo, qwerty from test3 where id = 8}
 } {8.0 Boba Fett 3000.0 4000.0 9000.0}
 
+
 do_test insert1-0.5 {
     execsql {INSERT INTO test4 values (8, "Boba", "Fett", 3000, 4000, 9000)}
     execsql {SELECT id, name, surname, bar, foo, qwerty from test3 where id = 8}
