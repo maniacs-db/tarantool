@@ -39,9 +39,10 @@ SpaceIterator &SpaceIterator::operator=(const SpaceIterator &)
 { return *this; }
 
 SpaceIterator::SpaceIterator(int argc_, void **argv_,
-	SIteratorCallback callback_, int space_id_, int index_id_, char *key_, char *key_end_)
+	SIteratorCallback callback_, int space_id_, int index_id_,
+	char *key_, char *key_end_, iterator_type it_tp)
 	: argc(argc_), argv(argv_), callback(callback_), space_id(space_id_),
-	index_id(index_id_), key(key_), key_end(key_end_), iter(NULL),
+	index_id(index_id_), key(key_), key_end(key_end_), iter(NULL), iter_tp(it_tp),
 	current_tuple(NULL)
 {
 	Open();
@@ -80,11 +81,14 @@ bool SpaceIterator::IsOpen() const {
 }
 
 void SpaceIterator::Close() {
-	if (IsOpen()) box_iterator_free(iter);
+	if (IsOpen()) {
+		box_iterator_free(iter);
+		iter = NULL;
+	}
 }
 
 bool SpaceIterator::Open() {
-	iter = box_index_iterator(space_id, index_id, ITER_ALL, key, key_end);
+	iter = box_index_iterator(space_id, index_id, iter_tp, key, key_end);
 	return (iter != NULL);
 }
 
@@ -110,4 +114,8 @@ void SpaceIterator::IterateOver() {
 
 bool SpaceIterator::InProcess() const {
 	return IsOpen() && !IsEnd();
+}
+
+iterator_type SpaceIterator::GetIteratorType() const {
+	return iter_tp;
 }

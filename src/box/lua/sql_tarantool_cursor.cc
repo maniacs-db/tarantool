@@ -34,13 +34,11 @@
 int GetSerialTypeNum(u64 number) {
 	if (number == 0) return 8;
 	if (number == 1) return 9;
-	int content_size = sqlite3VarintLen(number);
-	if (content_size <= 4) return content_size;
-	switch(content_size) {
-		case 6: return 5;
-		case 8: return 6;
-		default: return -1;
-	}
+	Mem mem;
+	memset(&mem, 0, sizeof(Mem));
+	mem.u.i = number;
+	mem.flags = MEM_Int;
+	return sqlite3VdbeSerialType(&mem, 1);
 }
 
 int GetSerialTypeNum(double) {
@@ -89,7 +87,8 @@ int PutVarintDataNum(unsigned char *data, double n) {
 
 int DataVarintLenNum(u64 number) {
 	if ((number == 0) || (number == 1)) return 0;
-	return sqlite3VarintLen(number);
+	int st = GetSerialTypeNum(number);
+	return sqlite3VdbeSerialTypeLen(st);
 }
 
 int DataVarintLenNum(i64 number) {

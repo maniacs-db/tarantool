@@ -53,6 +53,7 @@ private:
 	char *key;
 	char *key_end;
 	box_iterator_t *iter;
+	iterator_type iter_tp;
 
 	box_tuple_t *current_tuple;
 
@@ -62,7 +63,8 @@ private:
 
 public:
 	SpaceIterator(int argc, void **argv,
-		SIteratorCallback callback, int space_id, int index_id, char *key, char *key_end);
+		SIteratorCallback callback, int space_id, int index_id,
+		char *key, char *key_end, iterator_type it_tp = ITER_ALL);
 	~SpaceIterator();
 	SpaceIterator &operator=(SpaceIterator &&ob);
 	SpaceIterator(SpaceIterator &&ob);
@@ -75,6 +77,7 @@ public:
 	box_tuple_t *GetTuple();
 	void IterateOver();
 	bool InProcess() const;
+	iterator_type GetIteratorType() const;
 };
 
  #endif
