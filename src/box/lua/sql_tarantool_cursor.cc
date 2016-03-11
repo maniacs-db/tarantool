@@ -34,13 +34,11 @@
 int GetSerialTypeNum(u64 number) {
 	if (number == 0) return 8;
 	if (number == 1) return 9;
-	int content_size = sqlite3VarintLen(number);
-	if (content_size <= 4) return content_size;
-	switch(content_size) {
-		case 6: return 5;
-		case 8: return 6;
-		default: return -1;
-	}
+	Mem mem;
+	memset(&mem, 0, sizeof(Mem));
+	mem.u.i = number;
+	mem.flags = MEM_Int;
+	return sqlite3VdbeSerialType(&mem, 1);
 }
 
 int GetSerialTypeNum(double) {
@@ -89,7 +87,8 @@ int PutVarintDataNum(unsigned char *data, double n) {
 
 int DataVarintLenNum(u64 number) {
 	if ((number == 0) || (number == 1)) return 0;
-	return sqlite3VarintLen(number);
+	int st = GetSerialTypeNum(number);
+	return sqlite3VdbeSerialTypeLen(st);
 }
 
 int DataVarintLenNum(i64 number) {
@@ -473,6 +472,7 @@ bool TarantoolCursor::make_msgpuck_from_btree_cell(const char *dt, int sz) {
 		}
 	}
 	delete[] cols_in_msg;
+	delete[] vals;
 	data = msg_pack;
 	size = it - msg_pack;
 	return true;
@@ -505,6 +505,29 @@ int TarantoolCursor::MoveToFirst(int *pRes) {
 		*pRes = 1;
 		return SQLITE_OK;
 	}
+	rc = this->make_btree_cell_from_tuple();
+	return SQLITE_OK;
+}
+
+int TarantoolCursor::MoveToLast(int *pRes) {
+	static const char *__func_name = "TarantoolCursor::MoveToLast";
+	if (it) box_iterator_free(it);
+	it = box_index_iterator(space_id, index_id, type, key, key_end);
+	int len = box_index_len(space_id, index_id);
+	int rc;
+	for (int i = 0; i < len - 1; ++i) {
+		rc = box_iterator_next(it, &tpl);
+		if (rc) {
+			say_debug("%s(): box_iterator_next return rc = %d <> 0\n", __func_name, rc);
+			*pRes = 1;
+			tpl = NULL;
+		}
+	}
+	if (tpl == NULL) {
+		*pRes = 1;
+		return SQLITE_OK;
+	}
+	*pRes = 0;
 	rc = this->make_btree_cell_from_tuple();
 	return SQLITE_OK;
 }
@@ -564,6 +587,10 @@ int TarantoolCursor::Insert(const void *pKey,
 		return SQLITE_ERROR;
 	}
 	int rc = box_insert(space_id, (const char *)data, (const char *)data + size, NULL);
+	sql_tarantool_api *trn_api = &db->trn_api;
+	if (rc) {
+		trn_api->log_debug(box_error_message(box_error_last()));
+	}
 	return rc;
 }
 

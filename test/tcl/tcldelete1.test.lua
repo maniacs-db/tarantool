@@ -116,6 +116,19 @@ box.space.test5:insert({4, 'Albert', 'Sukaev', 400, 500, 600})
 box.space.test5:insert({5, 'Ksenia', 'Ivanova', 100, 200, 700})
 box.space.test5:insert({6, 'Brian', 'Hankok', 200, 300, 800})
 
+-- init space test6
+if box.space.test6 then
+    box.space.test6:drop()
+end
+box.schema.space.create('test6')
+box.space.test6:create_index('primary', {parts={1, 'NUM'}, type='TREE'})
+format = {}
+format[1] = {name='id', type='num'}
+box.space.test6:format(format)
+box.space.test6:insert({1})
+box.space.test6:insert({2})
+box.space.test6:insert({3})
+
 -- initialization params
 local arg0 = ffi.cast('char *',  tarantool_path)
 local arg1 = ffi.cast('char *', "./delete1.test")
