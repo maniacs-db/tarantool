@@ -1911,6 +1911,7 @@ trntl_cursor_move_to_unpacked(void * /*self_*/, BtCursor *pCur, UnpackedRecord *
 	return c->cursor.MoveToUnpacked(pIdxKey, intKey, pRes, xRecordCompare);
 }
 
+
 //~~~~~~~~~~~~~~~~~~~~~~~~ T A R A N T O O L   N E S T E D   F U N C S ~~~~~~~~~~~~~~~~~~~~~~~~
 
 int
