@@ -67,10 +67,8 @@ struct tuple_field_format {
 	 * for current field.
 	 * If the field does not participate in indexes then it has
 	 * no offset in field map and INT_MAX is stored in this member.
-	 * Due to specific field map in tuple (it is stored before tuple),
-	 * the positions in field map is negative.
-	 * Thus if this member is negative, smth like
-	 * tuple->data[((uint32_t *)tuple)[format->offset_slot[fieldno]]]
+	 * Thus if this member is positive, smth like
+	 * tuple->data[tuple->field_map[format->offset_slot[fieldno]]]
 	 * gives the start of the field
 	 */
 	int32_t offset_slot;

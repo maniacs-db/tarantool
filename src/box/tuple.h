@@ -293,7 +293,12 @@ struct tuple
 	 * Fields can have variable length, and thus are packed
 	 * into a contiguous magpacked byte array.
 	 */
-	char data[0];
+	char data[];
+	/**
+	 * After the varible-length data there lays:
+	 * uint32_t field_map[];
+	 * Offsets of indexed fields (see tuple_format)
+	 */
 } __attribute__((packed));
 
 /**
@@ -316,6 +321,12 @@ tuple_id_create(struct tuple *tuple)
 	return tuple;
 }
 
+uint32_t *
+tuple_ptr_field_map(const struct tuple *tuple)
+{
+	return (uint32_t *)(tuple->data + tuple->bsize);
+}
+
 /**
  * tuple_ptr_format forward declaration.
  */
@@ -330,6 +341,7 @@ static inline const char *
 tuple_ptr_data(const struct tuple *tuple, const struct tuple_format *format)
 {
 	(void)format;
+	assert(format == tuple_ptr_format(tuple));
 	return tuple->data;
 }
 
@@ -353,6 +365,7 @@ tuple_ptr_data_range(const struct tuple *tuple,
 		     const struct tuple_format *format, uint32_t *size)
 {
 	(void)format;
+	assert(format == tuple_ptr_format(tuple));
 	*size = tuple->bsize;
 	return tuple->data;
 }
@@ -585,11 +598,9 @@ tuple_ptr_field(const struct tuple_format *format,
 			return pos;
 		}
 
-		if (format->fields[i].offset_slot != INT32_MAX) {
-			uint32_t *field_map = (uint32_t *) tuple;
-			int32_t slot = format->fields[i].offset_slot;
-			return data + field_map[slot];
-		}
+		int32_t slot = format->fields[i].offset_slot;
+		if (slot >= 0)
+			return data + tuple_ptr_field_map(tuple)[slot];
 	}
 	ERROR_INJECT(ERRINJ_TUPLE_FIELD, return NULL);
 	return tuple_field_raw(data, bsize, i);

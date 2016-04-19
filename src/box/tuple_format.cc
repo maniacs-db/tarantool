@@ -170,7 +170,7 @@ tuple_format_new(struct rlist *key_list)
 	 * First field is always simply accessible,
 	 * so we don't store offset for it
 	 */
-	format->fields[0].offset_slot = INT32_MAX;
+	format->fields[0].offset_slot = INT32_MIN;
 
 	int current_slot = 0;
 	for (uint32_t i = 1; i < format->field_count; i++) {
@@ -179,11 +179,11 @@ tuple_format_new(struct rlist *key_list)
 		 * quickly access indexed fields.
 		 */
 		if (format->fields[i].type == UNKNOWN)
-			format->fields[i].offset_slot = INT32_MAX;
+			format->fields[i].offset_slot = INT32_MIN;
 		else
-			format->fields[i].offset_slot = --current_slot;
+			format->fields[i].offset_slot = current_slot++;
 	}
-	format->field_map_size = -current_slot * sizeof(uint32_t);
+	format->field_map_size = current_slot * sizeof(uint32_t);
 	return format;
 }
 

@@ -72,7 +72,7 @@ tuple_init_field_map(struct tuple_format *format, tuple_id tupid)
 	struct tuple *tuple = tuple_ptr(tupid);
 	const char *data = tuple_ptr_data(tuple, format);
 	const char *pos = data;
-	uint32_t *field_map = (uint32_t *) tuple;
+	uint32_t *field_map = tuple_ptr_field_map(tuple);;
 
 	/* Check to see if the tuple has a sufficient number of fields. */
 	uint32_t field_count = mp_decode_array(&pos);
@@ -91,7 +91,7 @@ tuple_init_field_map(struct tuple_format *format, tuple_id tupid)
 		mp_type = mp_typeof(*pos);
 		key_mp_type_validate(format->fields[i].type, mp_type,
 				     ER_FIELD_TYPE, i + INDEX_OFFSET);
-		if (format->fields[i].offset_slot < 0)
+		if (format->fields[i].offset_slot >= 0)
 			field_map[format->fields[i].offset_slot] =
 				(uint32_t) (pos - data);
 		mp_next(&pos);
@@ -183,7 +183,7 @@ tuple_alloc(struct tuple_format *format, size_t size, char **data)
 				  "slab allocator", "tuple");
 		}
 	}
-	struct tuple *tuple = (struct tuple *)(ptr + format->field_map_size);
+	struct tuple *tuple = (struct tuple *)ptr;
 
 	tuple->refs = 0;
 	tuple->version = snapshot_version;
@@ -207,7 +207,7 @@ tuple_ptr_delete(struct tuple *tuple)
 	assert(tuple->refs == 0);
 	struct tuple_format *format = tuple_ptr_format(tuple);
 	size_t total = sizeof(struct tuple) + tuple->bsize + format->field_map_size;
-	char *ptr = (char *) tuple - format->field_map_size;
+	char *ptr = (char *) tuple;
 	tuple_format_ref(format, -1);
 	if (!memtx_alloc.is_delayed_free_mode || tuple->version == snapshot_version)
 		smfree(&memtx_alloc, ptr, total);
