@@ -205,19 +205,19 @@ local m = {
 
 for digest, name in pairs(digest_shortcuts) do
     m[digest] = function (str)
-        return crypto.digest[digest](str)
+        return crypto.digest[digest]:get(str)
     end
     m[digest .. '_hex'] = function (str)
-        return str_to_hex(crypto.digest[digest](str))
+        return str_to_hex(crypto.digest[digest]:get(str))
     end
 end
 
 m['aes256cbc'] = {
     encrypt = function (str, key, iv)
-        return crypto.cipher.aes256.cbc.encrypt(str, key, iv)
+        return crypto.cipher.aes256.cbc:encrypt(str, key, iv)
     end,
     decrypt = function (str, key, iv)
-        return crypto.cipher.aes256.cbc.decrypt(str, key, iv)
+        return crypto.cipher.aes256.cbc:decrypt(str, key, iv)
     end
 }
 
